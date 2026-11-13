@@ -1,0 +1,8 @@
+{
+  "name": "backend-api-w1",
+  "version": "1.0.0",
+  "description": "Repair request system back-end (week 1)",
+  "main": "src/index.js",
+  "scripts": { "dev": "nodemon src/index.js" },
+  "license": "ISC"
+}
