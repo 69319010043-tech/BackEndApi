@@ -10,13 +10,4 @@
 ## แผนภาพ UML
 - docs/uml/usecase.drawio, usecase.png
 - docs/uml/class-diagram.drawio, class-diagram.png
-- ตาราง FR: docs/functional-requirements.md
-
-## วิธีติดตั้ง
-```
-npm install
-cp .env.example .env
-```
-
-## โครงสร้างโฟลเดอร์
-`src/routes`, `src/controllers`, `src/models`, `src/config`
+- ตาราง FR: docs/ตารางFR.md
