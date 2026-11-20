@@ -1,8 +1,14 @@
 {
   "name": "backend-api-w1",
   "version": "1.0.0",
-  "description": "Repair request system back-end (week 1)",
+  "description": "Repair request system back-end (weeks 1 and 2)",
   "main": "src/index.js",
-  "scripts": { "dev": "nodemon src/index.js" },
-  "license": "ISC"
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.3.0"
+  }
 }
