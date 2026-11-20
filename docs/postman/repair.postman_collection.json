@@ -1,0 +1,356 @@
+{
+  "info": {
+    "_postman_id": "5de3cfe8-9352-4d37-9a53-2b6a9ebebfd0",
+    "name": "Repair API",
+    "description": "CRUD requests for /api/v1/repair-requests. Run against the in-memory Express API at {{baseUrl}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create repair request - starts pending",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 201 Created', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('new request has required fields and pending status', () => {",
+              "  pm.expect(body).to.include.keys('id', 'computerId', 'symptom', 'status', 'technicianId', 'resultNote');",
+              "  pm.expect(body.status).to.eql('pending');",
+              "  pm.expect(body.technicianId).to.eql(null);",
+              "  pm.expect(body.resultNote).to.eql(null);",
+              "});",
+              "pm.collectionVariables.set('repairRequestId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"computerId\": 101,\n  \"symptom\": \"Lab computer powers on but has no display\",\n  \"status\": \"done\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/repair-requests"
+      }
+    },
+    {
+      "name": "Create repair request - missing symptom returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 400 Bad Request', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('explains the missing symptom', () => {",
+              "  pm.expect(body.message).to.eql('Invalid repair request');",
+              "  pm.expect(body.errors).to.include('symptom must be a non-empty string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"computerId\": 101\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/repair-requests"
+      }
+    },
+    {
+      "name": "List repair requests",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 200 OK and a JSON array', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).to.be.an('array');",
+              "});",
+              "const requests = pm.response.json();",
+              "pm.test('includes the request created earlier', () => {",
+              "  pm.expect(requests.some((item) => item.id === pm.collectionVariables.get('repairRequestId'))).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/repair-requests"
+      }
+    },
+    {
+      "name": "List pending repair requests",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 200 and only pending requests', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const requests = pm.response.json();",
+              "  pm.expect(requests).to.be.an('array');",
+              "  pm.expect(requests.every((item) => item.status === 'pending')).to.eql(true);",
+              "  pm.expect(requests.some((item) => item.id === pm.collectionVariables.get('repairRequestId'))).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/repair-requests?status=pending"
+      }
+    },
+    {
+      "name": "Get repair request by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns the requested item with 200', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('repairRequestId'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{repairRequestId}}"
+      }
+    },
+    {
+      "name": "Update status and repair result",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 200 with updated fields', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('in_progress');",
+              "  pm.expect(body.technicianId).to.eql(7001);",
+              "  pm.expect(body.resultNote).to.eql('Diagnosis started');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"in_progress\",\n  \"technicianId\": 7001,\n  \"resultNote\": \"Diagnosis started\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{repairRequestId}}"
+      }
+    },
+    {
+      "name": "Update with unsupported status - returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('rejects an unsupported status with 400', () => {",
+              "  pm.response.to.have.status(400);",
+              "  pm.expect(pm.response.json().errors[0]).to.include('status must be one of');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"closed\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{repairRequestId}}"
+      }
+    },
+    {
+      "name": "Cancel accepted repair request - returns 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('prevents cancelling an accepted request with 409', () => {",
+              "  pm.response.to.have.status(409);",
+              "  pm.expect(pm.response.json().message).to.include('cannot be cancelled');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{repairRequestId}}"
+      }
+    },
+    {
+      "name": "Get missing repair request - returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns the documented not found response', () => {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json()).to.eql({ message: 'Request not found' });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/repair-requests/2147483647"
+      }
+    },
+    {
+      "name": "Create cancellable repair request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 201 and stores a pending request ID', () => {",
+              "  pm.response.to.have.status(201);",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('pending');",
+              "  pm.collectionVariables.set('cancellableRequestId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"computerId\": 202,\n  \"symptom\": \"Keyboard keys are unresponsive\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/api/v1/repair-requests"
+      }
+    },
+    {
+      "name": "Cancel pending repair request - returns 204",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('returns 204 No Content with an empty body', () => {",
+              "  pm.response.to.have.status(204);",
+              "  pm.expect(pm.response.text()).to.eql('');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{cancellableRequestId}}"
+      }
+    },
+    {
+      "name": "Get deleted repair request - returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('deleted request is no longer found', () => {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json()).to.eql({ message: 'Request not found' });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/repair-requests/{{cancellableRequestId}}"
+      }
+    },
+    {
+      "name": "Delete missing repair request - returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('deleting a missing request returns 404', () => {",
+              "  pm.response.to.have.status(404);",
+              "  pm.expect(pm.response.json()).to.eql({ message: 'Request not found' });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/v1/repair-requests/2147483647"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "repairRequestId",
+      "value": ""
+    },
+    {
+      "key": "cancellableRequestId",
+      "value": ""
+    }
+  ]
+}
